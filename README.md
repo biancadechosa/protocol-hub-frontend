@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Protocol Hub — Frontend
 
-## Getting Started
+Next.js + Tailwind CSS frontend for **Protocol Hub**, a community-powered platform for sharing structured wellness protocols, discussing them in threads, leaving reviews, and voting on threads/comments.
 
-First, run the development server:
+The backend (Laravel API + Typesense search) lives in a separate repository:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**[protocol-hub-backend](https://github.com/biancadechosa/protocol-hub-backend)** — see that repo's README for API setup, Typesense configuration, and seeding instructions.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Install dependencies:
 
-## Learn More
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. Create `.env.local` in the project root:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```env
+   NEXT_PUBLIC_API_URL=http://127.0.0.1:8000/api
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   This should point to your running Laravel API (see the backend repo for setup).
 
-## Deploy on Vercel
+3. Run the dev server:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   The app runs at `http://localhost:3000`.
+
+---
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Browse and search protocols (Typesense), filter by tag, sort by recent/reviews/rating/upvotes, create a new protocol |
+| `/protocols/[id]` | Protocol detail — content, embedded thread feed with voting, reviews sidebar with submission form, start a new thread |
+| `/threads` | Global searchable/sortable thread feed across all protocols |
+| `/threads/[id]` | Thread detail — voting, nested comments with replies at any depth, comment/reply forms |
+
+---
+
+## Voting UX
+
+Vote controls use leaf icons (up = sage green, down = terracotta) instead of plain arrows. After every vote, the frontend refetches the affected thread/comment so the displayed score always reflects the live backend value (avoiding drift between cached search results and the database). Which arrow appears "active" is derived from the vote records returned by the API for the current browser's identifier, which is generated and persisted in `localStorage` (there is no authentication system).
+
+---
+
+## Tech Stack
+
+- Next.js (App Router) + TypeScript
+- Tailwind CSS
+- Framer Motion (animations)
+
+## Known Limitations
+
+- No authentication — votes and authorship are tied to a per-browser identifier (`localStorage`) or a freeform name field, not user accounts.
+- Edit/delete UI is intentionally not implemented on the frontend, since without authentication there's no way to restrict destructive actions to a content's original author. The backend exposes full CRUD; update/delete endpoints can be exercised directly via the API.
